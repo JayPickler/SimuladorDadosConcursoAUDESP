@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geração de Importações</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 28px 32px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h1 {
+            font-size: 20px;
+            margin: 0;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .card .ajuda {
+            font-size: 12px;
+            color: #888;
+            margin: 12px 0 0 0;
+        }
+
+        .subtitulo {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #666;
+            margin: 28px 0 12px 0;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+        }
+
+        .campo {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo label {
+            margin-bottom: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .campo input,
+        .campo select,
+        .campo textarea {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .linha {
+            display: flex;
+            gap: 16px;
+        }
+
+        .linha .campo {
+            flex: 1;
+        }
+
+        .grid-campos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px 24px;
+        }
+
+        .grid-campos .campo {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-campos {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .subbloco {
+            border: 1px solid #e2e2e2;
+            background: #fafbfc;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .subbloco-aninhado {
+            border: 1px dashed #d5d5d5;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 12px 0;
+        }
+
+        .subbloco-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .subbloco-header strong {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .membros-titulo {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin: 12px 0 8px 0;
+        }
+
+        .linha-repetivel {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .linha-repetivel:last-child {
+            margin-bottom: 0;
+        }
+
+        .linha-repetivel .linha {
+            flex: 1;
+        }
+
+        .questao-rotulo {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            min-width: 74px;
+            align-self: center;
+        }
+
+        .btn-remover,
+        .btn-remover-bloco {
+            background: #fdecea;
+            color: #c0392b;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .btn-adicionar {
+            background: #eef3fc;
+            color: #2d6cdf;
+            border: 1px dashed #2d6cdf;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .botoes {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .botoes button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primario {
+            background-color: #2d6cdf;
+            color: #fff;
+        }
+
+        .btn-secundario {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .aviso-dados {
+            padding: 12px 14px;
+            margin: 14px 0;
+            border: 1px solid #c9d9ea;
+            border-radius: 6px;
+            background: #eef6ff;
+            color: #274c70;
+            font-size: 13px;
+        }
+
+        .status-csv {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f8f8;
+            color: #555;
+            font-size: 13px;
+            white-space: pre-line;
+        }
+
+        .status-csv:empty { display: none; }
+        .status-csv.ok { border-color: #b8dcc3; background: #edf8f0; color: #236b39; }
+        .status-csv.erro { border-color: #efc1bd; background: #fff1f0; color: #a52a20; }
+        .status-csv.aviso { border-color: #ead49a; background: #fff9e6; color: #75580b; }
+
+        .cabecalhos-obrigatorios {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        #formCandidatos { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div id="tpComissoes" class="card">
+            <h1>Tipos de comissão de avaliação</h1>
+
+            <form id="formTiposComissao">
+                <div id="tiposComissaoLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addTipoComissao()">+ Adicionar tipo de comissão</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarTiposComissao()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpComissoesAvalia" class="card">
+            <h1>Comissão de avaliação</h1>
+
+            <form id="formComissoesAvalia">
+                <div id="comissoesLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addComissao()">+ Adicionar comissão</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarComissoes()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpConcursoEProcSeletivo" class="card">
+            <h1>Concurso e Processo Seletivo</h1>
+
+            <form id="formConcurso">
+                <div class="grid-campos">
+                    <div class="campo">
+                        <label for="cDescricao">Descrição do concurso ou processo seletivo</label>
+                        <input type="text" id="cDescricao" maxlength="300" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cNumeroEdital">Número do edital</label>
+                        <input type="text" id="cNumeroEdital" maxlength="10" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cAno">Ano do concurso</label>
+                        <input type="text" id="cAno" inputmode="numeric" maxlength="4" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cTipoRecrutamento">Tipo de recrutamento</label>
+                        <select id="cTipoRecrutamento" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                            <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="cRegimeJuridico">Regime jurídico</label>
+                        <select id="cRegimeJuridico" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="CLT">CLT</option>
+                            <option value="ESTATUTARIO">Estatutário</option>
+                            <option value="MISTO">Misto</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="cConfigRecrutamento">Configuração do recrutamento</label>
+                        <input type="text" id="cConfigRecrutamento" maxlength="70" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cTipoImportacao">Tipo de importação</label>
+                        <select id="cTipoImportacao" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="COMPLETO">Completo</option>
+                            <option value="SIMPLIFICADO">Simplificado</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="cDataInicialInscricao">Data inicial da inscrição</label>
+                        <input type="date" id="cDataInicialInscricao" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cDataFinalInscricao">Data final da inscrição</label>
+                        <input type="date" id="cDataFinalInscricao" required>
+                    </div>
+                </div>
+
+                <div class="subtitulo">Comissões de avaliação vinculadas</div>
+                <div id="comissoesAssocLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addComissaoAssoc()">+ Adicionar comissão vinculada</button>
+
+                <div class="subtitulo">Editais</div>
+                <div id="editaisLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addEdital()">+ Adicionar edital</button>
+
+                <div class="subtitulo">Cargos</div>
+                <div id="cargosLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addCargo()">+ Adicionar cargo</button>
+
+                <div class="subtitulo">Avaliações</div>
+                <p class="ajuda" id="avaliacaoAjuda">Selecione o "Tipo de importação" no início do formulário para configurar as avaliações.</p>
+
+                <div id="blocoAvaliacaoSimplificado" style="display:none;">
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label for="avsTipoProcesso">Tipo processo avaliação</label>
+                            <select id="avsTipoProcesso">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="MANUAL">Manual</option>
+                                <option value="AUTOMATICO">Automático</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label for="avsTipoAvaliacao">Tipo avaliação</label>
+                            <select id="avsTipoAvaliacao">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="PROVAS">Provas</option>
+                                <option value="TITULOS">Títulos</option>
+                                <option value="PROVAS_TITULOS">Provas e títulos</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label for="avsData">Data da avaliação</label>
+                            <input type="date" id="avsData">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="blocoAvaliacaoCompleto" style="display:none;">
+                    <div id="avaliacoesLista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addAvaliacao()">+ Adicionar avaliação</button>
+                </div>
+
+                <div class="subtitulo">Questões</div>
+                <div id="questoesLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addQuestao()">+ Adicionar questão</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarConcurso()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpCandidatos" class="card">
+            <h1>Candidatos do concurso / processo seletivo</h1>
+
+            <div id='importacaoCandidatosCsv'>
+                <p class='ajuda'>Os dados de identificação do concurso informados na seção anterior são reutilizados automaticamente. Não é mais necessário cadastrar candidato por candidato.</p>
+                <div class='aviso-dados'>
+                    O CSV é processado somente neste navegador. Nenhum CPF ou dado pessoal é enviado pela internet.
+                    O modelo reúne somente os campos utilizados nos arquivos TXT previstos no leiaute da Betha:
+                    candidatos, classificação, avaliação simplificada e convocação. Compartilhe o arquivo por canal seguro.
+                </div>
+                <div class='botoes'>
+                    <button type='button' class='btn-secundario' onclick='baixarModeloCandidatosCsv()'>Baixar modelo CSV da banca</button>
+                </div>
+                <div class='campo' style='margin-top:18px;'>
+                    <label for='arquivoCandidatosCsv'>CSV preenchido pela banca</label>
+                    <input type='file' id='arquivoCandidatosCsv' accept='.csv,text/csv' onchange='carregarCandidatosCsv(this.files[0])'>
+                    <p class='ajuda'>Use ponto e vírgula como separador. Vírgula e tabulação também são aceitas. Datas: AAAA-MM-DD ou DD/MM/AAAA.</p>
+                </div>
+                <div id='statusCandidatosCsv' class='status-csv' role='status'></div>
+                <div class='botoes'>
+                    <button type='button' class='btn-primario acao-csv' onclick='gerarCandidatosCsv()' disabled>Gerar candidatos.txt</button>
+                    <button type='button' class='btn-primario acao-csv' onclick='gerarClassificacaoCsv()' disabled>Gerar classificacao.txt</button>
+                    <button type='button' class='btn-primario acao-csv' onclick='gerarAvaliacaoSimplificadaCsv()' disabled>Gerar avaliacao_candidatos.txt</button>
+                    <button type='button' class='btn-primario acao-csv' onclick='gerarConvocacaoCsv()' disabled>Gerar convocacao.txt</button>
+                </div>
+                <details style='margin-top:18px;'>
+                    <summary>Campos obrigatórios do modelo</summary>
+                    <p class='cabecalhos-obrigatorios'>codigo_inscricao; cargo; cpf; nome; data_nascimento; sexo; data_inscricao; situacao_inscricao; situacao_candidato; isento; condicao_especial; lactante; servico_justica; desempregado; sub_judice; aprovado_importacao; classificacao_geral</p>
+                    <p class='ajuda'>Nome, nascimento e sexo são obrigatórios no modelo para permitir criar a pessoa no RH Cloud. Os demais campos são opcionais ou condicionais previstos no leiaute e são enviados somente ao TXT correspondente.</p>
+                </details>
+            </div>
+
+            <form id="formCandidatos">
+                <div id="candidatosLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addCandidato()">+ Adicionar candidato</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarCandidatos()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpAvaliacaoCandidatos" class="card">
+            <h1>Avaliação dos candidatos</h1>
+
+            <form id="formAvaliacaoCandidatos">
+                <div class="campo">
+                    <label for="acTipoConcurso">Tipo do concurso</label>
+                    <select id="acTipoConcurso" required onchange="toggleTipoAvaliacaoCandidatos()">
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="COMPLETO">Completo</option>
+                        <option value="SIMPLIFICADO">Simplificado</option>
+                    </select>
+                </div>
+
+                <div id="blocoAvaliacaoCandidatoCompleto" style="display:none;">
+                    <div id="avaliacoesCandidatosCompletoLista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addAvaliacaoCandidatoCompleto()">+ Adicionar avaliação</button>
+                </div>
+
+                <div id="blocoAvaliacaoCandidatoSimplificado" style="display:none;">
+                    <div id="avaliacoesCandidatosSimplificadoLista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addAvaliacaoCandidatoSimplificado()">+ Adicionar avaliação</button>
+                </div>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarAvaliacaoCandidatos()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpClassificacao" class="card">
+            <h1>Classificação dos candidatos</h1>
+
+            <form id="formClassificacao">
+                <div class="subbloco" id="importClassificacaoBloco">
+                    <div class="subbloco-header">
+                        <strong>Importar planilha de classificação (.xlsx)</strong>
+                    </div>
+                    <p class="ajuda">
+                        Cada <b>cargo</b> da planilha vira um bloco de classificação já preenchido com os candidatos e suas posições.
+                        Colunas usadas: <b>Cargo</b>, <b>Inscrição</b> e <b>Classificação</b> (ex.: "12º"). As demais colunas são ignoradas.
+                        Cargos com mais de 300 candidatos são divididos em blocos de 300 (limite do layout).
+                    </p>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" id="impClDescricao" maxlength="300" placeholder="Como está cadastrado no RH Cloud">
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital</label>
+                            <input type="text" id="impClEdital" maxlength="10">
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" id="impClAno" inputmode="numeric" maxlength="4">
+                        </div>
+                        <div class="campo">
+                            <label>Tipo de recrutamento</label>
+                            <select id="impClTipoRecrutamento">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Ordenação manual</label>
+                            <select id="impClOrdenacao">
+                                <option value="N" selected>Não</option>
+                                <option value="S">Sim</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Em convocação</label>
+                            <select id="impClEmConvocacao">
+                                <option value="N" selected>Não</option>
+                                <option value="S">Sim</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Arquivo .xlsx</label>
+                        <input type="file" id="impClArquivo" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    </div>
+                    <label style="font-weight:normal;font-size:13px;">
+                        <input type="checkbox" id="impClSubstituir" checked>
+                        Substituir as classificações já preenchidas
+                    </label>
+                    <div class="botoes">
+                        <button type="button" class="btn-primario" onclick="importarClassificacaoXlsx()">Importar planilha</button>
+                    </div>
+                    <p class="ajuda" id="impClStatus"></p>
+                </div>
+
+                <div id="classificacoesLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addClassificacao()">+ Adicionar classificação</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarClassificacao()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tpConvocacao" class="card">
+            <h1>Convocação dos candidatos</h1>
+
+            <form id="formConvocacao">
+                <div id="convocacoesLista"></div>
+                <button type="button" class="btn-adicionar" onclick="addConvocacao()">+ Adicionar convocação</button>
+
+                <div class="botoes">
+                    <button type="button" class="btn-primario" onclick="gerarConvocacao()">Gerar TXT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        function val(el) { return el ? el.value.trim() : ''; }
+        function money(el) { const v = val(el); return v === '' ? '' : parseFloat(v).toFixed(2); }
+        function linha(...campos) { return campos.join('|') + '|'; }
+
+        function alternarVisibilidadeObrigatoria(el, visivel) {
+            el.style.display = visivel ? '' : 'none';
+            el.querySelectorAll('input, select, textarea').forEach(campo => {
+                if (!visivel) {
+                    if (campo.required) {
+                        campo.dataset.eraObrigatorio = '1';
+                        campo.required = false;
+                    }
+                } else if (campo.dataset.eraObrigatorio) {
+                    campo.required = true;
+                }
+            });
+        }
+
+        function baixarArquivo(nomeArquivo, conteudo) {
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nomeArquivo;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function removerLinha(botao) {
+            const linha = botao.closest('.linha-repetivel');
+            const container = linha.parentElement;
+            linha.remove();
+            if (container && container.id === 'questoesLista') {
+                renumerarQuestoes();
+            }
+        }
+
+        function camposQuantidadesHtml(prefixo) {
+            const campos = [
+                ['comum', 'Quantidade de vagas comum'],
+                ['pne', 'Quantidade de vagas PNE'],
+                ['racial', 'Quantidade de vagas Cota Racial'],
+                ['outros', 'Quantidade de vagas Outros'],
+                ['reserva', 'Quantidade de vagas Reserva'],
+                ['indigena', 'Quantidade de vagas Indígena'],
+                ['compartilhado', 'Quantidade de vagas Compartilhado - Pretos e Pardos/Indígena'],
+                ['quilombola', 'Quantidade de vagas Quilombola']
+            ];
+            return campos.map(([cls, label]) => `
+                <div class="campo">
+                    <label>${label}</label>
+                    <input type="text" inputmode="numeric" maxlength="10" class="${prefixo}-${cls}" required>
+                </div>`).join('');
+        }
+
+        function lerQuantidades(container, prefixo) {
+            const campos = ['comum', 'pne', 'racial', 'outros', 'reserva', 'indigena', 'compartilhado', 'quilombola'];
+            return campos.map(cls => val(container.querySelector(`.${prefixo}-${cls}`)));
+        }
+
+        // ---------- Tipos de comissão de avaliação ----------
+
+        function addTipoComissao() {
+            const container = document.getElementById('tiposComissaoLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Descrição do tipo de comissão de avaliação</label>
+                            <input type="text" class="tc-descricao" maxlength="100" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function gerarTiposComissao() {
+            const form = document.getElementById('formTiposComissao');
+            if (!form.reportValidity()) return;
+
+            const linhas = [];
+            document.querySelectorAll('#tiposComissaoLista .linha-repetivel').forEach(row => {
+                linhas.push(linha('TIPOCOMISSAO', val(row.querySelector('.tc-descricao'))));
+            });
+
+            if (linhas.length === 0) {
+                alert('Adicione ao menos um tipo de comissão.');
+                return;
+            }
+
+            linhas.push('FIM|');
+            baixarArquivo('tipos_comissao.txt', linhas.join('\n'));
+        }
+
+        // ---------- Comissão de avaliação ----------
+
+        function addComissao() {
+            const container = document.getElementById('comissoesLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco comissao-bloco">
+                    <div class="subbloco-header">
+                        <strong>Comissão</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.comissao-bloco').remove()">Remover comissão</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição da comissão de avaliação</label>
+                            <input type="text" class="c-descricao" maxlength="100" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo de comissão</label>
+                            <input type="text" class="c-tipo" maxlength="100" required>
+                        </div>
+                        <div class="campo">
+                            <label>Vigência</label>
+                            <input type="date" class="c-vigencia" required>
+                        </div>
+                    </div>
+                    <div class="membros-titulo">Membros</div>
+                    <div class="membros-lista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addMembro(this)">+ Adicionar membro</button>
+                </div>`);
+
+            const bloco = container.lastElementChild;
+            bloco.querySelector('.c-tipo').closest('.campo').remove();
+            addMembro(bloco.querySelector('.btn-adicionar'));
+        }
+
+        function addMembro(botao) {
+            const lista = botao.closest('.comissao-bloco').querySelector('.membros-lista');
+            lista.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel membro-linha">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Tipo de função</label>
+                            <input type="text" class="m-funcao" maxlength="100" required>
+                        </div>
+                        <div class="campo">
+                            <label>CPF</label>
+                            <input type="text" class="m-cpf" maxlength="11" inputmode="numeric" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function gerarComissoes() {
+            const form = document.getElementById('formComissoesAvalia');
+            if (!form.reportValidity()) return;
+
+            const blocos = document.querySelectorAll('#comissoesLista .comissao-bloco');
+            if (blocos.length === 0) {
+                alert('Adicione ao menos uma comissão.');
+                return;
+            }
+            for (const bloco of blocos) {
+                if (bloco.querySelectorAll('.membro-linha').length === 0) {
+                    alert('Toda comissão precisa de ao menos um membro.');
+                    return;
+                }
+            }
+
+            const linhas = [];
+            blocos.forEach(bloco => {
+                linhas.push(linha('COMISSAO',
+                    val(bloco.querySelector('.c-descricao')),
+                    '', // opcional: número oficial do ato
+                    '', // opcional removido do formulário: tipo de comissão
+                    val(bloco.querySelector('.c-vigencia'))
+                ));
+                bloco.querySelectorAll('.membro-linha').forEach(m => {
+                    linhas.push(linha('MEMBRO',
+                        val(m.querySelector('.m-funcao')),
+                        val(m.querySelector('.m-cpf'))
+                    ));
+                });
+            });
+
+            linhas.push('FIM|');
+            baixarArquivo('comissoes.txt', linhas.join('\n'));
+        }
+
+        // ---------- Concurso e processo seletivo ----------
+
+        function addComissaoAssoc() {
+            const container = document.getElementById('comissoesAssocLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Descrição da comissão de avaliação vinculada</label>
+                            <input type="text" class="assoc-descricao" maxlength="100" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        const TIPOS_EDITAL = [
+            'ABERTURA', 'CANCELAMENTO', 'CLASSIFICACAO_FINAL_HOMOLOGACAO_RESULTADOS',
+            'CONVOCACAO_PARA_PROVAS', 'CONVOCACAO_NOMEACAO', 'DIVULGACAO_GABARITO_PRAZO_RECURSOS',
+            'DIVULGACAO_MEMBROS_BANCA_EXAMINADORA', 'EDITAL_COMPLEMENTAR', 'HOMOLOGACAO_INSCRICOES',
+            'LISTA_RESULTADOS', 'OUTROS', 'PARALISACAO', 'PRORROGACAO',
+            'RESULTADO_RECURSOS_REFERENTE_RESULTADOS', 'RESULTADO_RECURSOS_REFERENTE_INSCRICOES',
+            'RETIFICACAO', 'RETIFICACAO_HOMOLOGACAO'
+        ];
+
+        function addEdital() {
+            const container = document.getElementById('editaisLista');
+            const opcoes = TIPOS_EDITAL.map(t => `<option value="${t}">${t}</option>`).join('');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Tipo do edital</label>
+                            <select class="edital-tipo" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                ${opcoes}
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Número oficial do ato</label>
+                            <input type="text" class="edital-numato" maxlength="10" inputmode="numeric" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function addCargo() {
+            const container = document.getElementById('cargosLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco cargo-bloco">
+                    <div class="subbloco-header">
+                        <strong>Cargo</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.cargo-bloco').remove()">Remover cargo</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do cargo</label>
+                            <input type="text" class="cargo-descricao" maxlength="200" required>
+                        </div>
+                        <div class="campo">
+                            <label>Forma de distribuição de vagas</label>
+                            <select class="cargo-forma" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CARGO">Cargo</option>
+                                <option value="AREA_ATUACAO">Área de atuação</option>
+                                <option value="REGIAO">Região</option>
+                                <option value="AREA_ATUACAO_REGIAO">Área de atuação e região</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Valor da inscrição</label>
+                            <input type="number" step="0.01" min="0" class="cargo-valor" required>
+                        </div>
+                        <div class="campo">
+                            <label>Média para aprovação</label>
+                            <input type="number" step="0.01" min="0" class="cargo-media" required>
+                        </div>
+                        ${camposQuantidadesHtml('q')}
+                    </div>
+                </div>`);
+        }
+
+        function addAvaliacao() {
+            const container = document.getElementById('avaliacoesLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco avaliacao-bloco">
+                    <div class="subbloco-header">
+                        <strong>Avaliação</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.avaliacao-bloco').remove()">Remover avaliação</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição da avaliação</label>
+                            <input type="text" class="av-descricao" maxlength="60" required>
+                        </div>
+                        <div class="campo">
+                            <label>Data da avaliação</label>
+                            <input type="date" class="av-data" required>
+                        </div>
+                        <div class="campo">
+                            <label>Hora inicial</label>
+                            <input type="time" class="av-hora-inicial" required>
+                        </div>
+                        <div class="campo">
+                            <label>Hora final</label>
+                            <input type="time" class="av-hora-final" required>
+                        </div>
+                        <div class="campo">
+                            <label>Configuração da avaliação</label>
+                            <input type="text" class="av-config" maxlength="70" required>
+                        </div>
+                        <div class="campo">
+                            <label>Caráter da avaliação</label>
+                            <select class="av-carater" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="ELIMINATORIO">Eliminatório</option>
+                                <option value="CLASSIFICATORIO">Classificatório</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Quantidade de questões</label>
+                            <input type="text" inputmode="numeric" maxlength="2" class="av-qtd-questoes" required>
+                        </div>
+                        <div class="campo">
+                            <label>Peso</label>
+                            <input type="number" step="0.01" min="0" class="av-peso" required>
+                        </div>
+                        <div class="campo">
+                            <label>Pontuação mínima</label>
+                            <input type="number" step="0.01" min="0" class="av-pontuacao-minima" required>
+                        </div>
+                    </div>
+
+                    <div class="membros-titulo">Locais de avaliação</div>
+                    <div class="locais-lista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addLocal(this)">+ Adicionar local</button>
+
+                    <div class="membros-titulo">Cargos desta avaliação</div>
+                    <div class="cargos-avaliacao-lista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addCargoAvaliacao(this)">+ Adicionar cargo</button>
+                </div>`);
+
+            const bloco = container.lastElementChild;
+            const botoes = bloco.querySelectorAll('.btn-adicionar');
+            addLocal(botoes[0]);
+            addCargoAvaliacao(botoes[1]);
+        }
+
+        function addLocal(botao) {
+            const lista = botao.previousElementSibling;
+            lista.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Empresa (CNPJ)</label>
+                            <input type="text" class="local-empresa" maxlength="14" inputmode="numeric" required>
+                        </div>
+                        <div class="campo">
+                            <label>Bloco</label>
+                            <input type="text" class="local-bloco" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Sala</label>
+                            <input type="text" class="local-sala" maxlength="10" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function addCargoAvaliacao(botao) {
+            const lista = botao.previousElementSibling;
+            lista.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Descrição do cargo</label>
+                            <input type="text" class="ca-descricao" maxlength="200" required>
+                        </div>
+                        <div class="campo">
+                            <label>Distribuição das vagas</label>
+                            <select class="ca-distribuicao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CARGO">Cargo</option>
+                                <option value="AREA_ATUACAO">Área de atuação</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function renumerarQuestoes() {
+            document.querySelectorAll('#questoesLista .linha-repetivel').forEach((row, i) => {
+                const rotulo = row.querySelector('.questao-rotulo');
+                if (rotulo) rotulo.textContent = 'Questão ' + (i + 1);
+            });
+        }
+
+        function addQuestao() {
+            const container = document.getElementById('questoesLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="questao-rotulo"></div>
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Peso</label>
+                            <input type="number" step="0.01" min="0" class="q-peso" required>
+                        </div>
+                        <div class="campo">
+                            <label>Gabarito</label>
+                            <input type="text" class="q-gabarito" maxlength="12" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo</label>
+                            <select class="q-tipo" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="OBJETIVA">Objetiva</option>
+                                <option value="DISSERTATIVA">Dissertativa</option>
+                                <option value="REDACAO">Redação</option>
+                                <option value="PRATICA">Prática</option>
+                                <option value="TITULOS">Títulos</option>
+                                <option value="OBJETIVA_DISSERTATIVA">Objetiva/Dissertativa</option>
+                                <option value="ORAL">Oral</option>
+                                <option value="OUTROS">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+            renumerarQuestoes();
+        }
+
+        document.getElementById('cTipoImportacao').addEventListener('change', function () {
+            const tipo = this.value;
+            const questoes = document.getElementById('questoesLista');
+            const mostrarQuestoes = tipo === 'COMPLETO';
+            questoes.previousElementSibling.style.display = mostrarQuestoes ? '' : 'none';
+            questoes.style.display = mostrarQuestoes ? '' : 'none';
+            questoes.nextElementSibling.style.display = mostrarQuestoes ? '' : 'none';
+            questoes.querySelectorAll('input, select').forEach(campo => campo.required = mostrarQuestoes);
+            alternarVisibilidadeObrigatoria(document.getElementById('blocoAvaliacaoSimplificado'), tipo === 'SIMPLIFICADO');
+            alternarVisibilidadeObrigatoria(document.getElementById('blocoAvaliacaoCompleto'), tipo === 'COMPLETO');
+            document.getElementById('avaliacaoAjuda').style.display = tipo ? 'none' : '';
+            if (tipo === 'COMPLETO' && document.querySelectorAll('#avaliacoesLista .avaliacao-bloco').length === 0) {
+                addAvaliacao();
+            }
+        });
+
+        function gerarConcurso() {
+            const form = document.getElementById('formConcurso');
+            if (!form.reportValidity()) return;
+
+            const g = id => document.getElementById(id);
+
+            const comissoesAssoc = document.querySelectorAll('#comissoesAssocLista .linha-repetivel');
+            if (comissoesAssoc.length === 0) {
+                alert('Adicione ao menos uma Comissão de avaliação vinculada.');
+                return;
+            }
+            const editais = document.querySelectorAll('#editaisLista .linha-repetivel');
+            if (editais.length === 0) {
+                alert('Adicione ao menos um Edital.');
+                return;
+            }
+            const cargos = document.querySelectorAll('#cargosLista .cargo-bloco');
+            if (cargos.length === 0) {
+                alert('Adicione ao menos um Cargo.');
+                return;
+            }
+
+            const linhas = [];
+
+            linhas.push(linha('CONCURSO',
+                val(g('cDescricao')), val(g('cNumeroEdital')), val(g('cAno')),
+                val(g('cTipoRecrutamento')), val(g('cRegimeJuridico')), val(g('cConfigRecrutamento')),
+                val(g('cTipoImportacao')),
+                '', '', '', '', '', // datas opcionais: prorrogação inscrição, validade, prorrogação validade, prorrogação inscrição isentos, homologação
+                val(g('cDataInicialInscricao')), val(g('cDataFinalInscricao')),
+                '', '', '', // datas opcionais: inicial/final inscrição de isentos, publicação dos resultados
+                '', '', '', // atos opcionais: inscrição, contratação temporária, inscrição de isentos
+                '', '', // opcionais: responsável pela execução, executor do recrutamento (CNPJ)
+                '' // opcional: observação
+            ));
+
+            comissoesAssoc.forEach(row => {
+                linhas.push(linha('COMISSAO', val(row.querySelector('.assoc-descricao'))));
+            });
+
+            editais.forEach(row => {
+                linhas.push(linha('EDITAL',
+                    val(row.querySelector('.edital-tipo')),
+                    val(row.querySelector('.edital-numato')),
+                    '' // opcional: observação
+                ));
+            });
+
+            cargos.forEach(bloco => {
+                linhas.push(linha('CARGO',
+                    val(bloco.querySelector('.cargo-descricao')),
+                    val(bloco.querySelector('.cargo-forma')),
+                    money(bloco.querySelector('.cargo-valor')),
+                    money(bloco.querySelector('.cargo-media')),
+                    ...lerQuantidades(bloco, 'q')
+                ));
+            });
+
+            const tipoImportacao = val(g('cTipoImportacao'));
+
+            if (tipoImportacao === 'SIMPLIFICADO') {
+                const tipoProcesso = val(g('avsTipoProcesso'));
+                const tipoAvaliacao = val(g('avsTipoAvaliacao'));
+                const dataAvaliacao = val(g('avsData'));
+                if (!tipoProcesso || !tipoAvaliacao || !dataAvaliacao) {
+                    alert('Preencha os dados da Avaliação simplificada.');
+                    return;
+                }
+                linhas.push(linha('AVALIACAO_SIMPLIFICADO', tipoProcesso, tipoAvaliacao, dataAvaliacao));
+            } else if (tipoImportacao === 'COMPLETO') {
+                const avaliacoes = document.querySelectorAll('#avaliacoesLista .avaliacao-bloco');
+                if (avaliacoes.length === 0) {
+                    alert('Adicione ao menos uma Avaliação (concurso completo).');
+                    return;
+                }
+                for (const bloco of avaliacoes) {
+                    if (bloco.querySelectorAll('.locais-lista .linha-repetivel').length === 0) {
+                        alert('Toda avaliação precisa de ao menos um Local de avaliação.');
+                        return;
+                    }
+                    if (bloco.querySelectorAll('.cargos-avaliacao-lista .linha-repetivel').length === 0) {
+                        alert('Toda avaliação precisa de ao menos um Cargo.');
+                        return;
+                    }
+                }
+                avaliacoes.forEach(bloco => {
+                    linhas.push(linha('AVALIACAO',
+                        val(bloco.querySelector('.av-descricao')),
+                        val(bloco.querySelector('.av-data')),
+                        val(bloco.querySelector('.av-hora-inicial')),
+                        val(bloco.querySelector('.av-hora-final')),
+                        val(bloco.querySelector('.av-config')),
+                        val(bloco.querySelector('.av-carater')),
+                        val(bloco.querySelector('.av-qtd-questoes')),
+                        money(bloco.querySelector('.av-peso')),
+                        money(bloco.querySelector('.av-pontuacao-minima'))
+                    ));
+                    bloco.querySelectorAll('.locais-lista .linha-repetivel').forEach(row => {
+                        linhas.push(linha('LOCAL',
+                            val(row.querySelector('.local-empresa')),
+                            val(row.querySelector('.local-bloco')),
+                            val(row.querySelector('.local-sala')),
+                            '', '' // opcionais: fiscal, tipo de função
+                        ));
+                    });
+                    bloco.querySelectorAll('.cargos-avaliacao-lista .linha-repetivel').forEach(row => {
+                        linhas.push(linha('CARGOAVALIACAO',
+                            val(row.querySelector('.ca-descricao')),
+                            val(row.querySelector('.ca-distribuicao'))
+                        ));
+                    });
+                });
+            }
+
+            if (tipoImportacao === 'COMPLETO') {
+            const questoes = document.querySelectorAll('#questoesLista .linha-repetivel');
+            if (questoes.length === 0) {
+                alert('Adicione ao menos uma Questão.');
+                return;
+            }
+            questoes.forEach(row => {
+                linhas.push(linha('QUESTAO',
+                    money(row.querySelector('.q-peso')),
+                    val(row.querySelector('.q-gabarito')),
+                    val(row.querySelector('.q-tipo'))
+                ));
+            });
+            }
+
+            linhas.push('FIM|');
+            baixarArquivo('concurso.txt', linhas.join('\n'));
+        }
+
+        // ---------- Candidatos do concurso / processo seletivo ----------
+
+        function toggleCondicional(select, wrapSelector, valorGatilho) {
+            const bloco = select.closest('.subbloco');
+            const wrap = bloco.querySelector(wrapSelector);
+            alternarVisibilidadeObrigatoria(wrap, select.value === valorGatilho);
+        }
+
+        function renumerarCandidatos() {
+            document.querySelectorAll('#candidatosLista .candidato-bloco').forEach((bloco, i) => {
+                const rotulo = bloco.querySelector('.candidato-rotulo');
+                if (rotulo) rotulo.textContent = 'Candidato ' + (i + 1);
+            });
+        }
+
+        function addCandidato() {
+            const container = document.getElementById('candidatosLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco candidato-bloco">
+                    <div class="subbloco-header">
+                        <strong class="candidato-rotulo">Candidato</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.candidato-bloco').remove(); renumerarCandidatos();">Remover candidato</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" class="cd-concurso-descricao" maxlength="300" required>
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital do concurso</label>
+                            <input type="text" class="cd-concurso-edital" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" class="cd-concurso-ano" inputmode="numeric" maxlength="4" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo do recrutamento</label>
+                            <select class="cd-tipo-recrutamento" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Descrição do cargo</label>
+                            <input type="text" class="cd-cargo" maxlength="200" required>
+                        </div>
+                        <div class="campo">
+                            <label>Código de inscrição</label>
+                            <input type="text" class="cd-codigo-inscricao" inputmode="numeric" maxlength="18" required>
+                        </div>
+                        <div class="campo">
+                            <label>CPF do candidato</label>
+                            <input type="text" class="cd-cpf" maxlength="11" inputmode="numeric" required>
+                        </div>
+                        <div class="campo">
+                            <label>Data da inscrição</label>
+                            <input type="date" class="cd-data-inscricao" required>
+                        </div>
+                        <div class="campo">
+                            <label>Situação da inscrição</label>
+                            <select class="cd-situacao-inscricao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="DEFERIDA">Deferida</option>
+                                <option value="INDEFERIDA">Indeferida</option>
+                                <option value="NAO_AVALIADA">Não avaliada</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Situação do candidato</label>
+                            <select class="cd-situacao-candidato" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="AGUARDANDO_NOMEACAO">Aguardando nomeação</option>
+                                <option value="NOMEADO">Nomeado</option>
+                                <option value="NAO_NOMEADO">Não nomeado</option>
+                                <option value="CANCELADO_NOMEACAO">Cancelado nomeação</option>
+                                <option value="EMPOSSADO">Empossado</option>
+                                <option value="CANCELADO_POSSE">Cancelado posse</option>
+                                <option value="ADMITIDO">Admitido</option>
+                                <option value="PRORROGAR_POSSE">Prorrogar posse</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Isento</label>
+                            <select class="cd-isento" required onchange="toggleCondicional(this, '.cd-motivo-isencao-wrap', 'S')">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo cd-motivo-isencao-wrap" style="display:none;">
+                            <label>Motivo da isenção</label>
+                            <select class="cd-motivo-isencao">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="DOADOR_SANGUE">Doador de sangue</option>
+                                <option value="DOADOR_MEDULA">Doador de medula</option>
+                                <option value="FAMILIA_BAIXA_RENDA">Família de baixa renda</option>
+                                <option value="OUTRA">Outra</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Condição especial</label>
+                            <select class="cd-condicao-especial" required onchange="toggleCondicional(this, '.cd-recurso-wrap', 'S')">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo cd-recurso-wrap" style="display:none;">
+                            <label>Recurso por condição especial</label>
+                            <select class="cd-recurso">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="LOCAL_FACIL_ACESSO">Local de fácil acesso</option>
+                                <option value="TEMPO_ADICIONAL">Tempo adicional</option>
+                                <option value="USO_APARELHO_AUDICAO">Uso de aparelho de audição</option>
+                                <option value="INTERPRETE_LIBRAS">Intérprete de libras</option>
+                                <option value="PROVA_FONTE_AMPLIADA">Prova com fonte ampliada</option>
+                                <option value="SALA_AMAMENTACAO">Sala de amamentação</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Lactante</label>
+                            <select class="cd-lactante" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Serviço justiça</label>
+                            <select class="cd-servico-justica" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Desempregado</label>
+                            <select class="cd-desempregado" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Sub judice</label>
+                            <select class="cd-sub-judice" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Aprovado importação</label>
+                            <select class="cd-aprovado" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="membros-titulo">Dados da pessoa (obrigatório apenas se o CPF ainda não existir no sistema)</div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Nome da pessoa</label>
+                            <input type="text" class="cd-nome" maxlength="155">
+                        </div>
+                        <div class="campo">
+                            <label>Data de nascimento</label>
+                            <input type="date" class="cd-nascimento">
+                        </div>
+                        <div class="campo">
+                            <label>Sexo</label>
+                            <select class="cd-sexo">
+                                <option value="">Selecione...</option>
+                                <option value="MASCULINO">Masculino</option>
+                                <option value="FEMININO">Feminino</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>`);
+
+            renumerarCandidatos();
+        }
+
+        function gerarCandidatos() {
+            const form = document.getElementById('formCandidatos');
+            if (!form.reportValidity()) return;
+
+            const blocos = document.querySelectorAll('#candidatosLista .candidato-bloco');
+            if (blocos.length === 0) {
+                alert('Adicione ao menos um candidato.');
+                return;
+            }
+
+            const linhas = [];
+            blocos.forEach(bloco => {
+                const isento = val(bloco.querySelector('.cd-isento'));
+                const condicaoEspecial = val(bloco.querySelector('.cd-condicao-especial'));
+
+                linhas.push(linha('CANDIDATO',
+                    val(bloco.querySelector('.cd-concurso-descricao')),
+                    val(bloco.querySelector('.cd-concurso-edital')),
+                    val(bloco.querySelector('.cd-concurso-ano')),
+                    val(bloco.querySelector('.cd-tipo-recrutamento')),
+                    val(bloco.querySelector('.cd-cargo')),
+                    '', // opcional: região
+                    '', // opcional: área de atuação
+                    val(bloco.querySelector('.cd-codigo-inscricao')),
+                    val(bloco.querySelector('.cd-cpf')),
+                    val(bloco.querySelector('.cd-data-inscricao')),
+                    val(bloco.querySelector('.cd-situacao-inscricao')),
+                    val(bloco.querySelector('.cd-situacao-candidato')),
+                    isento,
+                    isento === 'S' ? val(bloco.querySelector('.cd-motivo-isencao')) : '',
+                    condicaoEspecial,
+                    condicaoEspecial === 'S' ? val(bloco.querySelector('.cd-recurso')) : '',
+                    '', // opcional: contato (primeiro)
+                    '', // opcional: telefone (primeiro)
+                    '', // opcional: contato (segundo)
+                    '', // opcional: telefone (segundo)
+                    '', // opcional: tipo de cota
+                    val(bloco.querySelector('.cd-lactante')),
+                    val(bloco.querySelector('.cd-servico-justica')),
+                    val(bloco.querySelector('.cd-desempregado')),
+                    val(bloco.querySelector('.cd-sub-judice')),
+                    '', // opcional: horas de serviço voluntário
+                    '', // opcional: média avaliações
+                    '', // opcional: observação
+                    val(bloco.querySelector('.cd-nome')),
+                    val(bloco.querySelector('.cd-nascimento')),
+                    val(bloco.querySelector('.cd-sexo')),
+                    val(bloco.querySelector('.cd-aprovado'))
+                ));
+            });
+
+            linhas.push('FIM|');
+            baixarArquivo('candidatos.txt', linhas.join('\n'));
+        }
+
+        // ---------- Avaliação dos candidatos ----------
+
+        function toggleTipoAvaliacaoCandidatos() {
+            const tipo = document.getElementById('acTipoConcurso').value;
+            document.getElementById('blocoAvaliacaoCandidatoCompleto').style.display = tipo === 'COMPLETO' ? '' : 'none';
+            document.getElementById('blocoAvaliacaoCandidatoSimplificado').style.display = tipo === 'SIMPLIFICADO' ? '' : 'none';
+            if (tipo === 'COMPLETO' && document.querySelectorAll('#avaliacoesCandidatosCompletoLista .avaliacao-candidato-bloco').length === 0) {
+                addAvaliacaoCandidatoCompleto();
+            }
+            if (tipo === 'SIMPLIFICADO' && document.querySelectorAll('#avaliacoesCandidatosSimplificadoLista .avaliacao-candidato-simples-bloco').length === 0) {
+                addAvaliacaoCandidatoSimplificado();
+            }
+        }
+
+        function renumerarAvaliacoesCandidatosCompleto() {
+            document.querySelectorAll('#avaliacoesCandidatosCompletoLista .avaliacao-candidato-bloco').forEach((b, i) => {
+                const r = b.querySelector('.acc-rotulo');
+                if (r) r.textContent = 'Avaliação ' + (i + 1);
+            });
+        }
+
+        function renumerarAvaliacoesCandidatosSimplificado() {
+            document.querySelectorAll('#avaliacoesCandidatosSimplificadoLista .avaliacao-candidato-simples-bloco').forEach((b, i) => {
+                const r = b.querySelector('.acs-rotulo');
+                if (r) r.textContent = 'Avaliação ' + (i + 1);
+            });
+        }
+
+        function addAvaliacaoCandidatoCompleto() {
+            const container = document.getElementById('avaliacoesCandidatosCompletoLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco avaliacao-candidato-bloco">
+                    <div class="subbloco-header">
+                        <strong class="acc-rotulo">Avaliação</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.avaliacao-candidato-bloco').remove(); renumerarAvaliacoesCandidatosCompleto();">Remover avaliação</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" class="acc-concurso-descricao" maxlength="300" required>
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital do concurso</label>
+                            <input type="text" class="acc-concurso-edital" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" class="acc-concurso-ano" inputmode="numeric" maxlength="4" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo do recrutamento</label>
+                            <select class="acc-tipo-recrutamento" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Código de inscrição</label>
+                            <input type="text" class="acc-codigo-inscricao" inputmode="numeric" maxlength="18" required>
+                        </div>
+                        <div class="campo">
+                            <label>Avaliada</label>
+                            <select class="acc-avaliada" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Compareceu</label>
+                            <select class="acc-compareceu" required onchange="toggleCondicional(this, '.acc-nota-wrap', 'S')">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo acc-nota-wrap" style="display:none;">
+                            <label>Nota</label>
+                            <input type="number" step="0.01" min="0" class="acc-nota">
+                        </div>
+                        <div class="campo">
+                            <label>Descrição da avaliação</label>
+                            <input type="text" class="acc-descricao-avaliacao" maxlength="60" required>
+                        </div>
+                        <div class="campo">
+                            <label>Data da avaliação</label>
+                            <input type="date" class="acc-data-avaliacao" required>
+                        </div>
+                    </div>
+
+                    <div class="membros-titulo">Questões (opcional)</div>
+                    <div class="questoes-avaliacao-lista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addQuestaoAvaliacaoCandidato(this)">+ Adicionar questão</button>
+                </div>`);
+
+            renumerarAvaliacoesCandidatosCompleto();
+        }
+
+        function addQuestaoAvaliacaoCandidato(botao) {
+            const lista = botao.previousElementSibling;
+            lista.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Questão</label>
+                            <input type="text" inputmode="numeric" maxlength="10" class="qac-questao" required>
+                        </div>
+                        <div class="campo">
+                            <label>Resposta (opcional)</label>
+                            <input type="text" maxlength="1" class="qac-resposta">
+                        </div>
+                        <div class="campo">
+                            <label>Nota da questão (opcional)</label>
+                            <input type="number" step="0.01" min="0" class="qac-nota">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function addAvaliacaoCandidatoSimplificado() {
+            const container = document.getElementById('avaliacoesCandidatosSimplificadoLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco avaliacao-candidato-simples-bloco">
+                    <div class="subbloco-header">
+                        <strong class="acs-rotulo">Avaliação</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.avaliacao-candidato-simples-bloco').remove(); renumerarAvaliacoesCandidatosSimplificado();">Remover avaliação</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" class="acs-concurso-descricao" maxlength="300" required>
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital do concurso</label>
+                            <input type="text" class="acs-concurso-edital" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" class="acs-concurso-ano" inputmode="numeric" maxlength="4" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo do recrutamento</label>
+                            <select class="acs-tipo-recrutamento" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Código de inscrição</label>
+                            <input type="text" class="acs-codigo-inscricao" inputmode="numeric" maxlength="18" required>
+                        </div>
+                        <div class="campo">
+                            <label>Avaliada</label>
+                            <select class="acs-avaliada" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Compareceu</label>
+                            <select class="acs-compareceu" required onchange="toggleCondicional(this, '.acs-nota-wrap', 'S')">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo acs-nota-wrap" style="display:none;">
+                            <label>Nota</label>
+                            <input type="number" step="0.01" min="0" class="acs-nota">
+                        </div>
+                    </div>
+                </div>`);
+
+            renumerarAvaliacoesCandidatosSimplificado();
+        }
+
+        function gerarAvaliacaoCandidatos() {
+            const form = document.getElementById('formAvaliacaoCandidatos');
+            if (!form.reportValidity()) return;
+
+            const tipo = val(document.getElementById('acTipoConcurso'));
+            const linhas = [];
+
+            if (tipo === 'COMPLETO') {
+                const blocos = document.querySelectorAll('#avaliacoesCandidatosCompletoLista .avaliacao-candidato-bloco');
+                if (blocos.length === 0) {
+                    alert('Adicione ao menos uma avaliação.');
+                    return;
+                }
+                blocos.forEach(bloco => {
+                    const compareceu = val(bloco.querySelector('.acc-compareceu'));
+                    linhas.push(linha('AVALIACAO',
+                        val(bloco.querySelector('.acc-concurso-descricao')),
+                        val(bloco.querySelector('.acc-concurso-edital')),
+                        val(bloco.querySelector('.acc-concurso-ano')),
+                        val(bloco.querySelector('.acc-tipo-recrutamento')),
+                        val(bloco.querySelector('.acc-codigo-inscricao')),
+                        val(bloco.querySelector('.acc-avaliada')),
+                        compareceu,
+                        val(bloco.querySelector('.acc-descricao-avaliacao')),
+                        val(bloco.querySelector('.acc-data-avaliacao')),
+                        compareceu === 'S' ? money(bloco.querySelector('.acc-nota')) : ''
+                    ));
+                    bloco.querySelectorAll('.questoes-avaliacao-lista .linha-repetivel').forEach(row => {
+                        linhas.push(linha('QUESTAO',
+                            val(row.querySelector('.qac-questao')),
+                            val(row.querySelector('.qac-resposta')),
+                            money(row.querySelector('.qac-nota'))
+                        ));
+                    });
+                });
+            } else {
+                const blocos = document.querySelectorAll('#avaliacoesCandidatosSimplificadoLista .avaliacao-candidato-simples-bloco');
+                if (blocos.length === 0) {
+                    alert('Adicione ao menos uma avaliação.');
+                    return;
+                }
+                blocos.forEach(bloco => {
+                    const compareceu = val(bloco.querySelector('.acs-compareceu'));
+                    linhas.push(linha('AVALIACAO_SIMPLIFICADO',
+                        val(bloco.querySelector('.acs-concurso-descricao')),
+                        val(bloco.querySelector('.acs-concurso-edital')),
+                        val(bloco.querySelector('.acs-concurso-ano')),
+                        val(bloco.querySelector('.acs-tipo-recrutamento')),
+                        val(bloco.querySelector('.acs-codigo-inscricao')),
+                        val(bloco.querySelector('.acs-avaliada')),
+                        compareceu,
+                        compareceu === 'S' ? money(bloco.querySelector('.acs-nota')) : ''
+                    ));
+                });
+            }
+
+            linhas.push('FIM|');
+            baixarArquivo('avaliacao_candidatos.txt', linhas.join('\n'));
+        }
+
+        // ---------- Classificação dos candidatos ----------
+
+        function renumerarClassificacoes() {
+            document.querySelectorAll('#classificacoesLista .classificacao-bloco').forEach((bloco, i) => {
+                const rotulo = bloco.querySelector('.classificacao-rotulo');
+                if (rotulo) rotulo.textContent = 'Classificação ' + (i + 1);
+            });
+        }
+
+        function addClassificacao() {
+            const container = document.getElementById('classificacoesLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco classificacao-bloco">
+                    <div class="subbloco-header">
+                        <strong class="classificacao-rotulo">Classificação</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.classificacao-bloco').remove(); renumerarClassificacoes();">Remover classificação</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" class="cl-concurso-descricao" maxlength="300" required>
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital do concurso</label>
+                            <input type="text" class="cl-concurso-edital" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" class="cl-concurso-ano" inputmode="numeric" maxlength="4" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo de recrutamento</label>
+                            <select class="cl-tipo-recrutamento" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Descrição do cargo</label>
+                            <input type="text" class="cl-cargo" maxlength="200" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ordenação manual</label>
+                            <select class="cl-ordenacao-manual" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Em convocação</label>
+                            <select class="cl-em-convocacao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="S">Sim</option>
+                                <option value="N">Não</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="membros-titulo">Candidatos classificados</div>
+                    <div class="candidatos-classificacao-lista"></div>
+                    <button type="button" class="btn-adicionar" onclick="addCandidatoClassificacao(this)">+ Adicionar candidato</button>
+                </div>`);
+
+            const bloco = container.lastElementChild;
+            addCandidatoClassificacao(bloco.querySelector('.btn-adicionar'));
+            renumerarClassificacoes();
+        }
+
+        function addCandidatoClassificacao(botao) {
+            const lista = botao.previousElementSibling;
+            lista.insertAdjacentHTML('beforeend', `
+                <div class="linha-repetivel">
+                    <div class="linha">
+                        <div class="campo">
+                            <label>Código de inscrição</label>
+                            <input type="text" inputmode="numeric" maxlength="18" class="clc-codigo-inscricao" required>
+                        </div>
+                        <div class="campo">
+                            <label>Posição de classificação</label>
+                            <input type="text" inputmode="numeric" maxlength="18" class="clc-posicao" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button>
+                </div>`);
+        }
+
+        function gerarClassificacao() {
+            const form = document.getElementById('formClassificacao');
+            if (!form.reportValidity()) return;
+
+            const blocos = document.querySelectorAll('#classificacoesLista .classificacao-bloco');
+            if (blocos.length === 0) {
+                alert('Adicione ao menos uma classificação.');
+                return;
+            }
+            for (const bloco of blocos) {
+                if (bloco.querySelectorAll('.candidatos-classificacao-lista .linha-repetivel').length === 0) {
+                    alert('Toda classificação precisa de ao menos um candidato.');
+                    return;
+                }
+            }
+
+            const linhas = [];
+            blocos.forEach(bloco => {
+                linhas.push(linha('CLASSIFICACAO',
+                    val(bloco.querySelector('.cl-concurso-descricao')),
+                    val(bloco.querySelector('.cl-concurso-edital')),
+                    val(bloco.querySelector('.cl-concurso-ano')),
+                    val(bloco.querySelector('.cl-tipo-recrutamento')),
+                    val(bloco.querySelector('.cl-cargo')),
+                    '', // opcional: área de atuação
+                    '', // opcional: região
+                    val(bloco.querySelector('.cl-ordenacao-manual')),
+                    val(bloco.querySelector('.cl-em-convocacao'))
+                ));
+                bloco.querySelectorAll('.candidatos-classificacao-lista .linha-repetivel').forEach(row => {
+                    linhas.push(linha('CANDIDATO',
+                        val(row.querySelector('.clc-codigo-inscricao')),
+                        val(row.querySelector('.clc-posicao'))
+                    ));
+                });
+            });
+
+            linhas.push('FIM|');
+            baixarArquivo('classificacao.txt', linhas.join('\n'));
+        }
+
+        // ---------- Importação da planilha de classificação ----------
+
+        function normalizarCabecalho(texto) {
+            return String(texto == null ? '' : texto)
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function acharColuna(cabecalho, candidatos, evitar) {
+            for (let i = 0; i < cabecalho.length; i++) {
+                const nome = normalizarCabecalho(cabecalho[i]);
+                if (evitar && evitar.some(e => nome.includes(e))) continue;
+                if (candidatos.some(c => nome === c || nome.includes(c))) return i;
+            }
+            return -1;
+        }
+
+        function soDigitos(texto) {
+            const m = String(texto == null ? '' : texto).match(/\d+/);
+            return m ? m[0] : '';
+        }
+
+        function importarClassificacaoXlsx() {
+            const status = document.getElementById('impClStatus');
+            status.style.color = '#c0392b';
+
+            if (typeof XLSX === 'undefined') {
+                status.textContent = 'Biblioteca de leitura de planilha não carregou. Verifique a conexão com a internet e recarregue a página.';
+                return;
+            }
+
+            const descricao = val(document.getElementById('impClDescricao'));
+            const edital = val(document.getElementById('impClEdital'));
+            const ano = val(document.getElementById('impClAno'));
+            const tipoRecrutamento = val(document.getElementById('impClTipoRecrutamento'));
+            const ordenacao = val(document.getElementById('impClOrdenacao'));
+            const emConvocacao = val(document.getElementById('impClEmConvocacao'));
+
+            if (!descricao || !edital || !ano || !tipoRecrutamento) {
+                status.textContent = 'Preencha Descrição do concurso, Número do edital, Ano e Tipo de recrutamento antes de importar.';
+                return;
+            }
+
+            const input = document.getElementById('impClArquivo');
+            const arquivo = input.files && input.files[0];
+            if (!arquivo) {
+                status.textContent = 'Selecione um arquivo .xlsx.';
+                return;
+            }
+
+            const leitor = new FileReader();
+            leitor.onerror = () => { status.textContent = 'Não foi possível ler o arquivo.'; };
+            leitor.onload = e => {
+                let matriz;
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const planilha = wb.Sheets[wb.SheetNames[0]];
+                    matriz = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: false, defval: '' });
+                } catch (erro) {
+                    status.textContent = 'Falha ao interpretar a planilha: ' + erro.message;
+                    return;
+                }
+
+                if (!matriz || matriz.length < 2) {
+                    status.textContent = 'A planilha não tem linhas de dados.';
+                    return;
+                }
+
+                const cabecalho = matriz[0];
+                let iCargo = acharColuna(cabecalho, ['cargo', 'descricao do cargo']);
+                let iInsc = acharColuna(cabecalho, ['inscricao', 'codigo de inscricao', 'inscrição']);
+                let iClassif = acharColuna(cabecalho, ['classificacao', 'classificação', 'posicao', 'posição', 'colocacao'], ['pcd', 'pne', 'deficiente']);
+
+                if (iCargo === -1) iCargo = 1;   // coluna B
+                if (iInsc === -1) iInsc = 4;     // coluna E
+                if (iClassif === -1) iClassif = 16; // coluna Q
+
+                const porCargo = new Map();
+                let ignoradas = 0;
+                for (let l = 1; l < matriz.length; l++) {
+                    const linha = matriz[l] || [];
+                    const cargo = String(linha[iCargo] == null ? '' : linha[iCargo]).trim();
+                    const insc = soDigitos(linha[iInsc]);
+                    const pos = soDigitos(linha[iClassif]);
+                    if (!cargo || !insc || !pos) { ignoradas++; continue; }
+                    if (!porCargo.has(cargo)) porCargo.set(cargo, []);
+                    porCargo.get(cargo).push({ insc, pos: parseInt(pos, 10) });
+                }
+
+                if (porCargo.size === 0) {
+                    status.textContent = 'Nenhuma linha válida encontrada (verifique as colunas Cargo, Inscrição e Classificação).';
+                    return;
+                }
+
+                const container = document.getElementById('classificacoesLista');
+                if (document.getElementById('impClSubstituir').checked) {
+                    container.innerHTML = '';
+                }
+
+                const LIMITE = 300;
+                let totalBlocos = 0;
+                let totalCandidatos = 0;
+
+                Array.from(porCargo.keys()).sort((a, b) => a.localeCompare(b, 'pt-BR')).forEach(cargo => {
+                    const candidatos = porCargo.get(cargo).sort((a, b) => a.pos - b.pos);
+                    totalCandidatos += candidatos.length;
+
+                    for (let ini = 0; ini < candidatos.length; ini += LIMITE) {
+                        const fatia = candidatos.slice(ini, ini + LIMITE);
+                        addClassificacao();
+                        const bloco = container.lastElementChild;
+
+                        bloco.querySelector('.cl-concurso-descricao').value = descricao;
+                        bloco.querySelector('.cl-concurso-edital').value = edital;
+                        bloco.querySelector('.cl-concurso-ano').value = ano;
+                        bloco.querySelector('.cl-tipo-recrutamento').value = tipoRecrutamento;
+                        bloco.querySelector('.cl-cargo').value = cargo;
+                        bloco.querySelector('.cl-ordenacao-manual').value = ordenacao;
+                        bloco.querySelector('.cl-em-convocacao').value = emConvocacao;
+
+                        const lista = bloco.querySelector('.candidatos-classificacao-lista');
+                        const btnAdd = bloco.querySelector('.candidatos-classificacao-lista + .btn-adicionar');
+                        lista.innerHTML = '';
+                        fatia.forEach(c => {
+                            addCandidatoClassificacao(btnAdd);
+                            const linhaCand = lista.lastElementChild;
+                            linhaCand.querySelector('.clc-codigo-inscricao').value = c.insc;
+                            linhaCand.querySelector('.clc-posicao').value = c.pos;
+                        });
+                        totalBlocos++;
+                    }
+                });
+
+                renumerarClassificacoes();
+
+                status.style.color = '#2d7a33';
+                status.textContent = `Importados ${porCargo.size} cargo(s), ${totalBlocos} bloco(s) e ${totalCandidatos} candidato(s).`
+                    + (ignoradas ? ` ${ignoradas} linha(s) ignoradas por falta de dados.` : '')
+                    + ' Confira os blocos e clique em "Gerar TXT".';
+            };
+            leitor.readAsArrayBuffer(arquivo);
+        }
+
+        // ---------- Convocação dos candidatos ----------
+
+        function renumerarConvocacoes() {
+            document.querySelectorAll('#convocacoesLista .convocacao-bloco').forEach((bloco, i) => {
+                const rotulo = bloco.querySelector('.convocacao-rotulo');
+                if (rotulo) rotulo.textContent = 'Convocação ' + (i + 1);
+            });
+        }
+
+        function toggleTipoConvocacao(select) {
+            const bloco = select.closest('.subbloco');
+            const tipo = select.value;
+            const wraps = {
+                CANCELADO_POSSE: '.cv-motivo-cancelamento-posse-wrap',
+                NAO_NOMEADO: '.cv-motivo-nao-nomeacao-wrap',
+                CANCELADO_NOMEACAO: '.cv-motivo-cancelamento-nomeacao-wrap',
+                PRORROGAR_POSSE: '.cv-motivo-prorrogacao-wrap'
+            };
+            Object.values(wraps).forEach(sel => {
+                alternarVisibilidadeObrigatoria(bloco.querySelector(sel), false);
+            });
+            if (wraps[tipo]) {
+                alternarVisibilidadeObrigatoria(bloco.querySelector(wraps[tipo]), true);
+            }
+
+            const posicao = bloco.querySelector('.cv-posicao');
+            posicao.required = tipo !== 'AGUARDANDO_NOMEACAO';
+        }
+
+        function addConvocacao() {
+            const container = document.getElementById('convocacoesLista');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="subbloco convocacao-bloco">
+                    <div class="subbloco-header">
+                        <strong class="convocacao-rotulo">Convocação</strong>
+                        <button type="button" class="btn-remover-bloco" onclick="this.closest('.convocacao-bloco').remove(); renumerarConvocacoes();">Remover convocação</button>
+                    </div>
+                    <div class="grid-campos">
+                        <div class="campo">
+                            <label>Descrição do concurso</label>
+                            <input type="text" class="cv-concurso-descricao" maxlength="300" required>
+                        </div>
+                        <div class="campo">
+                            <label>Número do edital do concurso</label>
+                            <input type="text" class="cv-concurso-edital" maxlength="10" required>
+                        </div>
+                        <div class="campo">
+                            <label>Ano do concurso</label>
+                            <input type="text" class="cv-concurso-ano" inputmode="numeric" maxlength="4" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo de recrutamento</label>
+                            <select class="cv-tipo-recrutamento" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="CONCURSO_PUBLICO">Concurso Público</option>
+                                <option value="PROCESSO_SELETIVO">Processo Seletivo</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Código de inscrição</label>
+                            <input type="text" class="cv-codigo-inscricao" inputmode="numeric" maxlength="18" required>
+                        </div>
+                        <div class="campo">
+                            <label>Tipo de convocação</label>
+                            <select class="cv-tipo-convocacao" required onchange="toggleTipoConvocacao(this)">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="AGUARDANDO_NOMEACAO">Aguardando nomeação</option>
+                                <option value="NOMEADO">Nomeado</option>
+                                <option value="NAO_NOMEADO">Não nomeado</option>
+                                <option value="CANCELADO_NOMEACAO">Cancelado nomeação</option>
+                                <option value="EMPOSSADO">Empossado</option>
+                                <option value="CANCELADO_POSSE">Cancelado posse</option>
+                                <option value="ADMITIDO">Admitido</option>
+                                <option value="PRORROGAR_POSSE">Prorrogar posse</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Data da convocação</label>
+                            <input type="date" class="cv-data-convocacao" required>
+                        </div>
+                        <div class="campo">
+                            <label>Posição de convocação</label>
+                            <input type="text" inputmode="numeric" maxlength="18" class="cv-posicao">
+                        </div>
+                        <div class="campo cv-motivo-cancelamento-posse-wrap" style="display:none;">
+                            <label>Motivo do cancelamento da posse</label>
+                            <select class="cv-motivo-cancelamento-posse">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="DESISTENCIA">Desistência</option>
+                                <option value="NAO_COMPARECIMENTO">Não comparecimento</option>
+                                <option value="UG_AGUARDANDO">UG aguardando</option>
+                            </select>
+                        </div>
+                        <div class="campo cv-motivo-nao-nomeacao-wrap" style="display:none;">
+                            <label>Motivo da não nomeação</label>
+                            <select class="cv-motivo-nao-nomeacao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="DESISTENTE">Desistente</option>
+                                <option value="FINAL_DA_FILA">Final da fila</option>
+                                <option value="NAO_ATENDEU_CONVOCACAO">Não atendeu convocação</option>
+                            </select>
+                        </div>
+                        <div class="campo cv-motivo-cancelamento-nomeacao-wrap" style="display:none;">
+                            <label>Motivo do cancelamento da nomeação</label>
+                            <select class="cv-motivo-cancelamento-nomeacao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="DESISTENTE">Desistente</option>
+                                <option value="FINAL_DA_FILA">Final da fila</option>
+                                <option value="NAO_ATENDEU_CONVOCACAO">Não atendeu convocação</option>
+                            </select>
+                        </div>
+                        <div class="campo cv-motivo-prorrogacao-wrap" style="display:none;">
+                            <label>Motivo de prorrogação de posse</label>
+                            <select class="cv-motivo-prorrogacao" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="FINAL_DE_FILA">Final de fila</option>
+                                <option value="PRORROGACAO_POR_MOTIVO_DE_SAUDE">Prorrogação por motivo de saúde</option>
+                                <option value="UG_AGUARDANDO_PRAZO_LEGAL_PARA_POSSE">UG aguardando prazo legal para posse</option>
+                                <option value="PRORROGACAO_JUSTIFICADA_POR_OUTRO_MOTIVO_AUTORIZADO_EM_LEI">Prorrogação justificada por outro motivo autorizado em lei</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>`);
+
+            renumerarConvocacoes();
+        }
+
+        function gerarConvocacao() {
+            const form = document.getElementById('formConvocacao');
+            if (!form) {
+                alert('Erro interno: formulário de Convocação não encontrado.');
+                return;
+            }
+            if (!form.reportValidity()) return;
+
+            const blocos = document.querySelectorAll('#convocacoesLista .convocacao-bloco');
+            if (blocos.length === 0) {
+                alert('Adicione ao menos uma convocação.');
+                return;
+            }
+
+            try {
+                const linhas = [];
+                blocos.forEach(bloco => {
+                    const tipo = val(bloco.querySelector('.cv-tipo-convocacao'));
+                    linhas.push(linha('CONVOCACAO',
+                        val(bloco.querySelector('.cv-concurso-descricao')),
+                        val(bloco.querySelector('.cv-concurso-edital')),
+                        val(bloco.querySelector('.cv-concurso-ano')),
+                        val(bloco.querySelector('.cv-tipo-recrutamento')),
+                        val(bloco.querySelector('.cv-codigo-inscricao')),
+                        tipo,
+                        val(bloco.querySelector('.cv-data-convocacao')),
+                        '', // opcional: justificativa
+                        tipo === 'CANCELADO_POSSE' ? val(bloco.querySelector('.cv-motivo-cancelamento-posse')) : '',
+                        tipo === 'NAO_NOMEADO' ? val(bloco.querySelector('.cv-motivo-nao-nomeacao')) : '',
+                        tipo === 'CANCELADO_NOMEACAO' ? val(bloco.querySelector('.cv-motivo-cancelamento-nomeacao')) : '',
+                        tipo === 'PRORROGAR_POSSE' ? val(bloco.querySelector('.cv-motivo-prorrogacao')) : '',
+                        val(bloco.querySelector('.cv-posicao'))
+                    ));
+                });
+
+                linhas.push('FIM|');
+                baixarArquivo('convocacao.txt', linhas.join('\n'));
+            } catch (erro) {
+                alert('Erro ao gerar o arquivo de Convocação: ' + erro.message);
+            }
+        }
+
+        // ---------- Candidatos por CSV ----------
+
+        const CAMPOS_CSV = 'codigo_inscricao;cargo;regiao;area_atuacao;cpf;nome;data_nascimento;sexo;data_inscricao;situacao_inscricao;situacao_candidato;isento;motivo_isencao;condicao_especial;recurso_condicao_especial;contato_1;telefone_1;contato_2;telefone_2;tipo_cota;lactante;servico_justica;desempregado;sub_judice;horas_servico_voluntario;media_avaliacoes;observacao;aprovado_importacao;classificacao_geral;avaliada;compareceu;nota_avaliacao;tipo_convocacao;data_convocacao;posicao_convocacao;motivo_cancelamento_posse;motivo_nao_nomeacao;motivo_cancelamento_nomeacao;motivo_prorrogacao_posse'.split(';');
+        const OBRIGATORIOS_CSV = 'codigo_inscricao;cargo;cpf;nome;data_nascimento;sexo;data_inscricao;situacao_inscricao;situacao_candidato;isento;condicao_especial;lactante;servico_justica;desempregado;sub_judice;aprovado_importacao;classificacao_geral'.split(';');
+        const CAMPOS_SN = 'isento;condicao_especial;lactante;servico_justica;desempregado;sub_judice;aprovado_importacao;avaliada;compareceu'.split(';');
+        const SITUACOES_INSCRICAO = ['DEFERIDA', 'INDEFERIDA', 'NAO_AVALIADA'];
+        const SITUACOES_CANDIDATO = ['AGUARDANDO_NOMEACAO', 'NOMEADO', 'NAO_NOMEADO', 'CANCELADO_NOMEACAO', 'EMPOSSADO', 'CANCELADO_POSSE', 'ADMITIDO', 'PRORROGAR_POSSE'];
+        const MOTIVOS_ISENCAO = ['DOADOR_SANGUE', 'DOADOR_MEDULA', 'FAMILIA_BAIXA_RENDA', 'OUTRA'];
+        const RECURSOS_ESPECIAIS = ['LOCAL_FACIL_ACESSO', 'TEMPO_ADICIONAL', 'USO_APARELHO_AUDICAO', 'INTERPRETE_LIBRAS', 'PROVA_FONTE_AMPLIADA', 'SALA_AMAMENTACAO', 'OUTRO'];
+        const TIPOS_COTA = ['PCD', 'RACIAL', 'OUTRA', 'INDIGENA', 'COMPARTILHADO', 'QUILOMBOLA'];
+        let candidatosCsv = [];
+        let errosCandidatosCsv = [];
+
+        function definirStatusCsv(texto, tipo) {
+            const status = document.getElementById('statusCandidatosCsv');
+            status.className = 'status-csv' + (tipo ? ' ' + tipo : '');
+            status.textContent = texto;
+        }
+
+        function liberarAcoesCsv(liberar) {
+            document.querySelectorAll('.acao-csv').forEach(botao => botao.disabled = !liberar);
+        }
+
+        function baixarModeloCandidatosCsv() {
+            baixarArquivo('modelo_candidatos_banca.csv', '\ufeff' + CAMPOS_CSV.join(';') + '\r\n');
+        }
+
+        function normalizarNomeCampo(texto) {
+            return String(texto == null ? '' : texto).replace(/^\ufeff/, '').normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+                .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+        }
+
+        function normalizarEnum(texto) {
+            return String(texto == null ? '' : texto).normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '').toUpperCase().trim().replace(/[\s/-]+/g, '_');
+        }
+
+        function normalizarSN(texto) {
+            const n = normalizarEnum(texto);
+            if (['S', 'SIM', 'YES', 'Y', '1'].includes(n)) return 'S';
+            if (['N', 'NAO', 'NO', '0'].includes(n)) return 'N';
+            return n;
+        }
+
+        function normalizarData(texto) {
+            const bruto = String(texto == null ? '' : texto).trim();
+            if (!bruto) return '';
+            let partes = bruto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!partes) {
+                const br = bruto.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (br) partes = [bruto, br[3], br[2], br[1]];
+            }
+            if (!partes) return bruto;
+            const data = new Date(Date.UTC(+partes[1], +partes[2] - 1, +partes[3]));
+            if (data.getUTCFullYear() !== +partes[1] || data.getUTCMonth() !== +partes[2] - 1 || data.getUTCDate() !== +partes[3]) return bruto;
+            return partes[1] + '-' + partes[2] + '-' + partes[3];
+        }
+
+        function numeroClassificacao(texto) {
+            const encontrado = String(texto == null ? '' : texto).match(/\d+/);
+            return encontrado ? String(parseInt(encontrado[0], 10)) : '';
+        }
+
+        function dataCsvValida(texto) {
+            const partes = String(texto || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!partes) return false;
+            const data = new Date(Date.UTC(+partes[1], +partes[2] - 1, +partes[3]));
+            return data.getUTCFullYear() === +partes[1] && data.getUTCMonth() === +partes[2] - 1 && data.getUTCDate() === +partes[3];
+        }
+
+        function cpfValido(texto) {
+            const cpf = String(texto == null ? '' : texto).replace(/\D/g, '');
+            if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
+            const digito = tamanho => {
+                let soma = 0;
+                for (let i = 0; i < tamanho; i++) soma += +cpf[i] * (tamanho + 1 - i);
+                const resto = soma * 10 % 11;
+                return resto === 10 ? 0 : resto;
+            };
+            return digito(9) === +cpf[9] && digito(10) === +cpf[10];
+        }
+
+        function separarCsv(texto) {
+            const fonte = String(texto).replace(/^\ufeff/, '');
+            const primeira = fonte.split(/\r?\n/).find(linha => linha.trim()) || '';
+            const delimitador = [';', ',', '\t'].sort((a, b) => primeira.split(b).length - primeira.split(a).length)[0];
+            const aspas = String.fromCharCode(34);
+            const matriz = [];
+            let linha = [], campo = '', entreAspas = false;
+            for (let i = 0; i < fonte.length; i++) {
+                const caractere = fonte[i];
+                if (entreAspas) {
+                    if (caractere === aspas && fonte[i + 1] === aspas) { campo += aspas; i++; }
+                    else if (caractere === aspas) entreAspas = false;
+                    else campo += caractere;
+                } else if (caractere === aspas) entreAspas = true;
+                else if (caractere === delimitador) { linha.push(campo); campo = ''; }
+                else if (caractere === '\n') { linha.push(campo.replace(/\r$/, '')); matriz.push(linha); linha = []; campo = ''; }
+                else campo += caractere;
+            }
+            if (campo.length || linha.length) { linha.push(campo.replace(/\r$/, '')); matriz.push(linha); }
+            return matriz.filter(l => l.some(c => String(c).trim()));
+        }
+
+        function prepararCandidatoCsv(bruto, numeroLinha) {
+            const c = Object.assign({}, bruto);
+            c.codigo_inscricao = String(c.codigo_inscricao || '').replace(/\D/g, '');
+            c.cpf = String(c.cpf || '').replace(/\D/g, '');
+            ['telefone_1', 'telefone_2'].forEach(campo => c[campo] = String(c[campo] || '').replace(/\D/g, ''));
+            c.data_nascimento = normalizarData(c.data_nascimento);
+            c.data_inscricao = normalizarData(c.data_inscricao);
+            c.data_convocacao = normalizarData(c.data_convocacao);
+            c.sexo = normalizarEnum(c.sexo);
+            if (c.sexo === 'M') c.sexo = 'MASCULINO';
+            if (c.sexo === 'F') c.sexo = 'FEMININO';
+            ['situacao_inscricao', 'situacao_candidato', 'motivo_isencao', 'recurso_condicao_especial', 'tipo_cota', 'tipo_convocacao', 'motivo_cancelamento_posse', 'motivo_nao_nomeacao', 'motivo_cancelamento_nomeacao', 'motivo_prorrogacao_posse'].forEach(campo => c[campo] = normalizarEnum(c[campo]));
+            CAMPOS_SN.forEach(campo => c[campo] = normalizarSN(c[campo]));
+            ['classificacao_geral', 'posicao_convocacao'].forEach(campo => c[campo] = numeroClassificacao(c[campo]));
+            c._linha = numeroLinha;
+            return c;
+        }
+
+        function validarCandidatoCsv(c) {
+            const erros = [], avisos = [], n = c._linha;
+            OBRIGATORIOS_CSV.forEach(campo => { if (!c[campo]) erros.push('Linha ' + n + ': campo obrigatório vazio (' + campo + ').'); });
+            Object.keys(c).filter(campo => campo !== '_linha').forEach(campo => {
+                if (/[|\r\n]/.test(String(c[campo] || ''))) erros.push('Linha ' + n + ': ' + campo + ' contém barra vertical ou quebra de linha.');
+            });
+            if (c.codigo_inscricao && !/^\d{1,18}$/.test(c.codigo_inscricao)) erros.push('Linha ' + n + ': codigo_inscricao deve ter até 18 dígitos.');
+            if (c.cpf && !cpfValido(c.cpf)) erros.push('Linha ' + n + ': CPF inválido.');
+            if (c.sexo && !['MASCULINO', 'FEMININO'].includes(c.sexo)) erros.push('Linha ' + n + ': sexo deve ser MASCULINO ou FEMININO.');
+            ['data_nascimento', 'data_inscricao'].forEach(campo => { if (c[campo] && !dataCsvValida(c[campo])) erros.push('Linha ' + n + ': data inválida em ' + campo + '.'); });
+            if (c.situacao_inscricao && !SITUACOES_INSCRICAO.includes(c.situacao_inscricao)) erros.push('Linha ' + n + ': situacao_inscricao inválida.');
+            if (c.situacao_candidato && !SITUACOES_CANDIDATO.includes(c.situacao_candidato)) erros.push('Linha ' + n + ': situacao_candidato inválida.');
+            CAMPOS_SN.filter(campo => c[campo]).forEach(campo => { if (!['S', 'N'].includes(c[campo])) erros.push('Linha ' + n + ': ' + campo + ' deve ser S ou N.'); });
+            if (c.isento === 'S' && !MOTIVOS_ISENCAO.includes(c.motivo_isencao)) erros.push('Linha ' + n + ': motivo_isencao obrigatório ou inválido.');
+            if (c.condicao_especial === 'S' && !c.recurso_condicao_especial) avisos.push('Linha ' + n + ': condição especial sem recurso informado.');
+            if (c.recurso_condicao_especial && !RECURSOS_ESPECIAIS.includes(c.recurso_condicao_especial)) erros.push('Linha ' + n + ': recurso_condicao_especial inválido.');
+            if (c.tipo_cota && !TIPOS_COTA.includes(c.tipo_cota)) erros.push('Linha ' + n + ': tipo_cota inválido.');
+            if (c.nome && c.nome.length > 155) erros.push('Linha ' + n + ': nome excede 155 caracteres.');
+            if (c.cargo && c.cargo.length > 200) erros.push('Linha ' + n + ': cargo excede 200 caracteres.');
+            if (c.observacao && c.observacao.length > 300) erros.push('Linha ' + n + ': observacao excede 300 caracteres.');
+            ['media_avaliacoes', 'nota_avaliacao'].forEach(campo => { if (c[campo] && !Number.isFinite(Number(String(c[campo]).replace(',', '.')))) erros.push('Linha ' + n + ': ' + campo + ' inválida.'); });
+            if (c.tipo_convocacao) {
+                if (!SITUACOES_CANDIDATO.includes(c.tipo_convocacao)) erros.push('Linha ' + n + ': tipo_convocacao inválido.');
+                if (!dataCsvValida(c.data_convocacao)) erros.push('Linha ' + n + ': data_convocacao obrigatória ou inválida.');
+                if (c.tipo_convocacao !== 'AGUARDANDO_NOMEACAO' && !c.posicao_convocacao) erros.push('Linha ' + n + ': posicao_convocacao obrigatória.');
+                if (c.situacao_candidato !== c.tipo_convocacao) erros.push('Linha ' + n + ': situacao_candidato deve ser igual a tipo_convocacao.');
+                if (!c.media_avaliacoes) avisos.push('Linha ' + n + ': convocação sem media_avaliacoes.');
+            }
+            return { erros, avisos };
+        }
+
+        let avisosCandidatosCsv = [];
+
+        function carregarCandidatosCsv(arquivo) {
+            liberarAcoesCsv(false);
+            candidatosCsv = [];
+            errosCandidatosCsv = [];
+            avisosCandidatosCsv = [];
+            if (!arquivo) { definirStatusCsv('', ''); return; }
+            const leitor = new FileReader();
+            leitor.onerror = () => definirStatusCsv('Não foi possível ler o arquivo.', 'erro');
+            leitor.onload = evento => {
+                try {
+                    const matriz = separarCsv(evento.target.result);
+                    if (matriz.length < 2) throw new Error('O CSV não possui linhas de candidatos.');
+                    const alias = { inscricao: 'codigo_inscricao', nascimento: 'data_nascimento', classificacao: 'classificacao_geral', nota_final: 'media_avaliacoes' };
+                    const cabecalho = matriz[0].map(campo => alias[normalizarNomeCampo(campo)] || normalizarNomeCampo(campo));
+                    const faltantes = OBRIGATORIOS_CSV.filter(campo => !cabecalho.includes(campo));
+                    if (faltantes.length) throw new Error('Faltam colunas obrigatórias: ' + faltantes.join(', ') + '.');
+                    const duplicados = cabecalho.filter((campo, i) => campo && cabecalho.indexOf(campo) !== i);
+                    if (duplicados.length) throw new Error('Há cabeçalhos duplicados no CSV.');
+                    candidatosCsv = matriz.slice(1).map((celulas, indice) => {
+                        const bruto = {};
+                        cabecalho.forEach((campo, coluna) => { if (campo) bruto[campo] = String(celulas[coluna] == null ? '' : celulas[coluna]).trim(); });
+                        return prepararCandidatoCsv(bruto, indice + 2);
+                    });
+                    candidatosCsv.forEach(c => {
+                        const resultado = validarCandidatoCsv(c);
+                        errosCandidatosCsv.push(...resultado.erros);
+                        avisosCandidatosCsv.push(...resultado.avisos);
+                    });
+                    const inscricoes = new Set(), cpfs = new Set();
+                    candidatosCsv.forEach(c => {
+                        if (inscricoes.has(c.codigo_inscricao)) errosCandidatosCsv.push('Linha ' + c._linha + ': codigo_inscricao duplicado.');
+                        inscricoes.add(c.codigo_inscricao);
+                        if (cpfs.has(c.cpf)) avisosCandidatosCsv.push('Linha ' + c._linha + ': CPF repetido no arquivo.');
+                        cpfs.add(c.cpf);
+                    });
+                    const cargos = new Set(candidatosCsv.map(c => c.cargo)).size;
+                    const mensagens = errosCandidatosCsv.concat(avisosCandidatosCsv).slice(0, 12);
+                    let texto = arquivo.name + ': ' + candidatosCsv.length + ' candidato(s), ' + cargos + ' cargo(s).\nErros: ' + errosCandidatosCsv.length + '. Avisos: ' + avisosCandidatosCsv.length + '.';
+                    if (mensagens.length) texto += '\n\n' + mensagens.join('\n');
+                    if (errosCandidatosCsv.length + avisosCandidatosCsv.length > mensagens.length) texto += '\n…há outras ocorrências.';
+                    definirStatusCsv(texto, errosCandidatosCsv.length ? 'erro' : avisosCandidatosCsv.length ? 'aviso' : 'ok');
+                    liberarAcoesCsv(!errosCandidatosCsv.length && candidatosCsv.length > 0);
+                } catch (erro) {
+                    candidatosCsv = [];
+                    errosCandidatosCsv = [erro.message];
+                    definirStatusCsv(erro.message, 'erro');
+                }
+            };
+            leitor.readAsText(arquivo, 'utf-8');
+        }
+
+        function dadosConcursoCsv() {
+            const ids = ['cDescricao', 'cNumeroEdital', 'cAno', 'cTipoRecrutamento'];
+            for (const id of ids) if (!document.getElementById(id).reportValidity()) return null;
+            return {
+                descricao: val(document.getElementById('cDescricao')),
+                edital: val(document.getElementById('cNumeroEdital')),
+                ano: val(document.getElementById('cAno')),
+                tipo: val(document.getElementById('cTipoRecrutamento')),
+                importacao: val(document.getElementById('cTipoImportacao'))
+            };
+        }
+
+        function csvPronto() {
+            if (!candidatosCsv.length || errosCandidatosCsv.length) {
+                definirStatusCsv('Selecione e corrija o CSV antes de gerar os arquivos.', 'erro');
+                return false;
+            }
+            return true;
+        }
+
+        function decimalCsv(texto) {
+            const bruto = String(texto == null ? '' : texto).trim().replace(',', '.');
+            if (!bruto) return '';
+            const numero = Number(bruto);
+            if (!Number.isFinite(numero)) throw new Error('Valor numérico inválido no CSV.');
+            return numero.toFixed(2);
+        }
+
+        function gerarCandidatosCsv() {
+            if (!csvPronto()) return;
+            const concurso = dadosConcursoCsv();
+            if (!concurso) return;
+            try {
+                const linhas = candidatosCsv.map(c => linha('CANDIDATO',
+                    concurso.descricao, concurso.edital, concurso.ano, concurso.tipo,
+                    c.cargo, c.regiao, c.area_atuacao, c.codigo_inscricao, c.cpf,
+                    c.data_inscricao, c.situacao_inscricao, c.situacao_candidato,
+                    c.isento, c.isento === 'S' ? c.motivo_isencao : '',
+                    c.condicao_especial, c.condicao_especial === 'S' ? c.recurso_condicao_especial : '',
+                    c.contato_1, c.telefone_1, c.contato_2, c.telefone_2, c.tipo_cota,
+                    c.lactante, c.servico_justica, c.desempregado, c.sub_judice,
+                    decimalCsv(c.horas_servico_voluntario), decimalCsv(c.media_avaliacoes), c.observacao,
+                    c.nome, c.data_nascimento, c.sexo, c.aprovado_importacao));
+                linhas.push('FIM|');
+                baixarArquivo('candidatos.txt', linhas.join('\r\n'));
+                definirStatusCsv('candidatos.txt gerado com ' + candidatosCsv.length + ' registro(s).', 'ok');
+            } catch (erro) { definirStatusCsv(erro.message, 'erro'); }
+        }
+
+        function gerarClassificacaoCsv() {
+            if (!csvPronto()) return;
+            const concurso = dadosConcursoCsv();
+            if (!concurso) return;
+            try {
+                const grupos = new Map();
+                candidatosCsv.forEach(c => {
+                    const chave = [c.cargo, c.area_atuacao, c.regiao].join('\u001f');
+                    if (!grupos.has(chave)) grupos.set(chave, []);
+                    grupos.get(chave).push(c);
+                });
+                const linhas = [];
+                Array.from(grupos.values()).sort((a, b) => a[0].cargo.localeCompare(b[0].cargo, 'pt-BR')).forEach(candidatos => {
+                    candidatos.sort((a, b) => +a.classificacao_geral - +b.classificacao_geral);
+                    for (let inicio = 0; inicio < candidatos.length; inicio += 300) {
+                        const bloco = candidatos.slice(inicio, inicio + 300);
+                        const primeiro = bloco[0];
+                        linhas.push(linha('CLASSIFICACAO', concurso.descricao, concurso.edital, concurso.ano, concurso.tipo,
+                            primeiro.cargo, primeiro.area_atuacao, primeiro.regiao, 'N', 'N'));
+                        bloco.forEach(c => linhas.push(linha('CANDIDATO', c.codigo_inscricao, c.classificacao_geral)));
+                    }
+                });
+                linhas.push('FIM|');
+                baixarArquivo('classificacao.txt', linhas.join('\r\n'));
+                definirStatusCsv('classificacao.txt gerado para ' + grupos.size + ' agrupamento(s). Blocos limitados a 300 candidatos.', 'ok');
+            } catch (erro) { definirStatusCsv(erro.message, 'erro'); }
+        }
+
+        function gerarAvaliacaoSimplificadaCsv() {
+            if (!csvPronto()) return;
+            const concurso = dadosConcursoCsv();
+            if (!concurso) return;
+            if (concurso.importacao !== 'SIMPLIFICADO') {
+                definirStatusCsv('A geração automática de avaliação por este CSV está disponível apenas para importação SIMPLIFICADA.', 'erro');
+                return;
+            }
+            const erros = [];
+            candidatosCsv.forEach(c => {
+                if (!['S', 'N'].includes(c.avaliada)) erros.push('Linha ' + c._linha + ': avaliada deve ser S ou N.');
+                if (!['S', 'N'].includes(c.compareceu)) erros.push('Linha ' + c._linha + ': compareceu deve ser S ou N.');
+                if (c.compareceu === 'S' && !c.nota_avaliacao) erros.push('Linha ' + c._linha + ': nota_avaliacao obrigatória quando compareceu = S.');
+            });
+            if (erros.length) { definirStatusCsv(erros.slice(0, 12).join('\n'), 'erro'); return; }
+            try {
+                const linhas = candidatosCsv.map(c => linha('AVALIACAO_SIMPLIFICADO',
+                    concurso.descricao, concurso.edital, concurso.ano, concurso.tipo,
+                    c.codigo_inscricao, c.avaliada, c.compareceu,
+                    c.compareceu === 'S' ? decimalCsv(c.nota_avaliacao) : ''));
+                linhas.push('FIM|');
+                baixarArquivo('avaliacao_candidatos.txt', linhas.join('\r\n'));
+                definirStatusCsv('avaliacao_candidatos.txt gerado com ' + candidatosCsv.length + ' registro(s).', 'ok');
+            } catch (erro) { definirStatusCsv(erro.message, 'erro'); }
+        }
+
+        function gerarConvocacaoCsv() {
+            if (!csvPronto()) return;
+            const concurso = dadosConcursoCsv();
+            if (!concurso) return;
+            const convocados = candidatosCsv.filter(c => c.tipo_convocacao);
+            if (!convocados.length) {
+                definirStatusCsv('Nenhuma linha possui tipo_convocacao. Nada foi gerado.', 'erro');
+                return;
+            }
+            const condicionais = [];
+            convocados.forEach(c => {
+                if (c.tipo_convocacao === 'CANCELADO_POSSE' && !c.motivo_cancelamento_posse) condicionais.push('Linha ' + c._linha + ': motivo_cancelamento_posse obrigatório.');
+                if (c.tipo_convocacao === 'NAO_NOMEADO' && !c.motivo_nao_nomeacao) condicionais.push('Linha ' + c._linha + ': motivo_nao_nomeacao obrigatório.');
+                if (c.tipo_convocacao === 'CANCELADO_NOMEACAO' && !c.motivo_cancelamento_nomeacao) condicionais.push('Linha ' + c._linha + ': motivo_cancelamento_nomeacao obrigatório.');
+                if (c.tipo_convocacao === 'PRORROGAR_POSSE' && !c.motivo_prorrogacao_posse) condicionais.push('Linha ' + c._linha + ': motivo_prorrogacao_posse obrigatório.');
+            });
+            if (condicionais.length) { definirStatusCsv(condicionais.slice(0, 12).join('\n'), 'erro'); return; }
+            try {
+                const linhas = convocados.map(c => linha('CONVOCACAO',
+                    concurso.descricao, concurso.edital, concurso.ano, concurso.tipo,
+                    c.codigo_inscricao, c.tipo_convocacao, c.data_convocacao, '',
+                    c.tipo_convocacao === 'CANCELADO_POSSE' ? c.motivo_cancelamento_posse : '',
+                    c.tipo_convocacao === 'NAO_NOMEADO' ? c.motivo_nao_nomeacao : '',
+                    c.tipo_convocacao === 'CANCELADO_NOMEACAO' ? c.motivo_cancelamento_nomeacao : '',
+                    c.tipo_convocacao === 'PRORROGAR_POSSE' ? c.motivo_prorrogacao_posse : '',
+                    c.tipo_convocacao === 'AGUARDANDO_NOMEACAO' ? '' : c.posicao_convocacao));
+                linhas.push('FIM|');
+                baixarArquivo('convocacao.txt', linhas.join('\r\n'));
+                definirStatusCsv('convocacao.txt gerado com ' + convocados.length + ' registro(s).', 'ok');
+            } catch (erro) { definirStatusCsv(erro.message, 'erro'); }
+        }
+
+        // ---------- Inicialização ----------
+
+        addTipoComissao();
+        addComissao();
+        addComissaoAssoc();
+        addEdital();
+        addCargo();
+        addQuestao();
+        document.getElementById('cTipoImportacao').dispatchEvent(new Event('change'));
+        addClassificacao();
+        addConvocacao();
+    </script>
+</body>
+</html>
